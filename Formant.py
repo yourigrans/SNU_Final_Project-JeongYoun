@@ -17,13 +17,36 @@ from scipy import signal
 import soundfile as sf
 import streamlit as st
 
-import matplotlib.pyplot as plt
+# ── 한글 폰트 설정 (Windows / Linux / macOS 모두 대응) ──────────────────────
 import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+from pathlib import Path
 
-matplotlib.rcParams['font.family'] = 'Malgun Gothic'
 
-matplotlib.rcParams['axes.unicode_minus'] = False
+def _set_korean_font():
+    # 1) 레포에 번들된 폰트를 최우선으로 사용 (가장 안정적)
+    candidates = [
+        Path(__file__).parent / "fonts" / "NanumGothic.ttf",          # 번들 폰트
+        Path("/usr/share/fonts/truetype/nanum/NanumGothic.ttf"),       # packages.txt: fonts-nanum
+    ]
+    for path in candidates:
+        if path.exists():
+            fm.fontManager.addfont(str(path))
+            matplotlib.rcParams["font.family"] = fm.FontProperties(fname=str(path)).get_name()
+            break
+    else:
+        # 2) 시스템에 이미 설치된 한글 폰트 탐색 (로컬 개발 환경 대비)
+        installed = {f.name for f in fm.fontManager.ttflist}
+        for name in ["NanumGothic", "Malgun Gothic", "AppleGothic", "NanumBarunGothic"]:
+            if name in installed:
+                matplotlib.rcParams["font.family"] = name
+                break
 
+    matplotlib.rcParams["axes.unicode_minus"] = False  # 마이너스 기호 깨짐 방지
+
+
+_set_korean_font()
 st.set_page_config(page_title="음성 분석기", layout="wide")
 st.title("음성 분석 및 포먼트 편집기")
 st.info(
